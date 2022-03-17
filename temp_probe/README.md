@@ -30,3 +30,23 @@ In general the equations are
 
 (farenheit) `Sensitivity needed (mV) = 1000 / (70 * 1.8 / F)`
 (celcius) `Sensitivity needed (mv) = 1000 / (70 / C)`
+
+### Fixing the problem
+
+So we have a problem: we want to measure .1 degree F temperature difference. This requires 0.794mV of ADC sensitivty which the ESP32 adc is unlikely to give us in our current setup. How to solve?
+
+- Switch to digital temperature probe (pro: good measurements, con: weird 1-wire protocol)
+- Increase the output voltage range (pro: no equipment change, con: not sure how to do accurately)
+- calibrate better (pro: can do now, con: labor intensive, limited by accuracy of bench supply)
+- cut out more noise (pro: can do now, con: slower response curve)
+
+I may, in the meantime, order a digital temperature IC. For now I will try to calibrate better and cut out more noise.
+
+## Calibrate better
+
+My first calibration was across the range 0V -> 3.3V. Given that we really only care about temperatures between (approx) 4C (40F) and 38C (100F), we can tighten up the voltage range significantly. Let's find the signal range for these measurements, and then we can calibrate just within this range to increase the analog accuracy.
+
+A note about the ADC. The ADC is 12 bits (0 -> 4095) across 0 -> 3300mV. This means that we can, at best, get 3300 / 4096 =.8mv steps in signal. So we just fundamentally can't (without scaling the signal) get the .1F accuracy that we want.
+
+According to the datasheet the signal range is -10C -> 60C = 0V -> 1V. So, 4C = 14/70 * 1V and 38C = 48/70 * 1V which gives the effective range .20V -> .68V. If we calibrate exactly within that range, we may get more accurate results.
+
